@@ -1,0 +1,144 @@
+@page "/stock-movements"
+@using InventoryManager.Data
+@using InventoryManager.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+
+<PageTitle>Stock Movements - Inventory Manager</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 text-primary">Stock Movements</h1>
+                <p class="lead">Track inventory changes and movements</p>
+            </div>
+            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
+                <i class="bi bi-plus-circle me-2"></i>Record Movement
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-2xl shadow-lg">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">Movement History</h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="input-group">
+                                <input type="text" class="form-control rounded-2xl" placeholder="Search movements..." @bind="SearchTerm" @bind:event="oninput" />
+                                <button class="btn btn-outline-secondary rounded-2xl" type="button">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (MovementList?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Product</th>
+                                        <th>Type</th>
+                                        <th>Quantity</th>
+                                        <th>Previous Stock</th>
+                                        <th>New Stock</th>
+                                        <th>User</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var movement in FilteredMovements)
+                                    {
+                                        <tr>
+                                            <td>@movement.Timestamp.ToString("MM/dd/yyyy HH:mm")</td>
+                                            <td><strong>@movement.Product?.Name</strong></td>
+                                            <td>
+                                                <span class="badge @(movement.MovementType == MovementType.IN ? "bg-success" : "bg-danger")">
+                                                    @movement.MovementType
+                                                </span>
+                                            </td>
+                                            <td>@movement.Quantity</td>
+                                            <td>@(movement.Product?.Stock - (movement.MovementType == MovementType.IN ? -movement.Quantity : movement.Quantity))</td>
+                                            <td>@movement.Product?.Stock</td>
+                                            <td>@movement.User?.UserName</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-info rounded-2xl" @onclick="() => ViewDetails(movement)">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger rounded-2xl" @onclick="() => DeleteMovement(movement)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-arrow-left-right fs-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No stock movements found</h4>
+                            <p class="text-muted">Start by recording your first stock movement.</p>
+                            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
+                                <i class="bi bi-plus-circle me-2"></i>Record First Movement
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<StockMovement> MovementList { get; set; } = new();
+    private List<Product> ProductList { get; set; } = new();
+    private string SearchTerm { get; set; } = "";
+    private bool ShowAddModal { get; set; } = false;
+    private StockMovement CurrentMovement { get; set; } = new();
+    private bool IsEditing { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        MovementList = await Context.StockMovements
+            .Include(sm => sm.Product)
+            .Include(sm => sm.User)
+            .OrderByDescending(sm => sm.Timestamp)
+            .ToListAsync();
+        ProductList = await Context.Products.ToListAsync();
+    }
+
+    private IEnumerable<StockMovement> FilteredMovements => 
+        MovementList.Where(m => string.IsNullOrEmpty(SearchTerm) || 
+                                 m.Product?.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) == true);
+
+    private void ViewDetails(StockMovement movement)
+    {
+        // TODO: Show movement details modal
+    }
+
+    private async Task DeleteMovement(StockMovement movement)
+    {
+        // TODO: Add confirmation dialog and reverse stock change
+        Context.StockMovements.Remove(movement);
+        await Context.SaveChangesAsync();
+        await LoadData();
+    }
+} 

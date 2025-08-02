@@ -1,0 +1,200 @@
+@page "/reports"
+@using InventoryManager.Data
+@using InventoryManager.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+
+<PageTitle>Reports - Inventory Manager</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 text-primary">Reports & Analytics</h1>
+            <p class="lead">View inventory insights and analytics</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card rounded-2xl shadow-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Low Stock Alert</h5>
+                </div>
+                <div class="card-body">
+                    @if (LowStockProducts?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Current Stock</th>
+                                        <th>Min Stock</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in LowStockProducts)
+                                    {
+                                        <tr>
+                                            <td><strong>@product.Name</strong></td>
+                                            <td>
+                                                <span class="badge bg-danger">@product.Stock</span>
+                                            </td>
+                                            <td>@product.MinimumStock</td>
+                                            <td>
+                                                @if (product.Stock == 0)
+                                                {
+                                                    <span class="badge bg-danger">Out of Stock</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Low Stock</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="bi bi-check-circle text-success fs-1"></i>
+                            <p class="text-success mt-2">All products are well stocked!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card rounded-2xl shadow-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Top Products by Stock Value</h5>
+                </div>
+                <div class="card-body">
+                    @if (TopProductsByValue?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Stock</th>
+                                        <th>Unit Price</th>
+                                        <th>Total Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in TopProductsByValue)
+                                    {
+                                        <tr>
+                                            <td><strong>@product.Name</strong></td>
+                                            <td>@product.Stock</td>
+                                            <td>$@product.Price.ToString("F2")</td>
+                                            <td><strong>$@((product.Stock * product.Price).ToString("F2"))</strong></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No products available for analysis.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card rounded-2xl shadow-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Recent Activity Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded-2xl p-3">
+                                <h3 class="text-primary">@TotalProducts</h3>
+                                <p class="text-muted mb-0">Total Products</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded-2xl p-3">
+                                <h3 class="text-success">@TotalSuppliers</h3>
+                                <p class="text-muted mb-0">Active Suppliers</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded-2xl p-3">
+                                <h3 class="text-info">@TotalMovements</h3>
+                                <p class="text-muted mb-0">Stock Movements</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded-2xl p-3">
+                                <h3 class="text-warning">@LowStockCount</h3>
+                                <p class="text-muted mb-0">Low Stock Items</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card rounded-2xl shadow-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="products" class="btn btn-outline-primary rounded-2xl">
+                            <i class="bi bi-box-seam me-2"></i>Manage Products
+                        </a>
+                        <a href="suppliers" class="btn btn-outline-success rounded-2xl">
+                            <i class="bi bi-truck me-2"></i>Manage Suppliers
+                        </a>
+                        <a href="stock-movements" class="btn btn-outline-info rounded-2xl">
+                            <i class="bi bi-arrow-left-right me-2"></i>View Movements
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Product> LowStockProducts { get; set; } = new();
+    private List<Product> TopProductsByValue { get; set; } = new();
+    private int TotalProducts { get; set; }
+    private int TotalSuppliers { get; set; }
+    private int TotalMovements { get; set; }
+    private int LowStockCount { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReportData();
+    }
+
+    private async Task LoadReportData()
+    {
+        var products = await Context.Products.Include(p => p.Supplier).ToListAsync();
+        var suppliers = await Context.Suppliers.ToListAsync();
+        var movements = await Context.StockMovements.ToListAsync();
+
+        LowStockProducts = products.Where(p => p.Stock <= p.MinimumStock).ToList();
+        TopProductsByValue = products.OrderByDescending(p => p.Stock * p.Price).Take(5).ToList();
+        
+        TotalProducts = products.Count;
+        TotalSuppliers = suppliers.Count;
+        TotalMovements = movements.Count;
+        LowStockCount = LowStockProducts.Count;
+    }
+} 

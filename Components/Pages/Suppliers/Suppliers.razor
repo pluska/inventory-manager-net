@@ -1,0 +1,150 @@
+@page "/suppliers"
+@using InventoryManager.Data
+@using InventoryManager.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+
+<PageTitle>Suppliers - Inventory Manager</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 text-primary">Suppliers</h1>
+                <p class="lead">Manage your product suppliers</p>
+            </div>
+            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
+                <i class="bi bi-plus-circle me-2"></i>Add Supplier
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-2xl shadow-lg">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">Supplier List</h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="input-group">
+                                <input type="text" class="form-control rounded-2xl" placeholder="Search suppliers..." @bind="SearchTerm" @bind:event="oninput" />
+                                <button class="btn btn-outline-secondary rounded-2xl" type="button">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (SupplierList?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Address</th>
+                                        <th>Products</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var supplier in FilteredSuppliers)
+                                    {
+                                        <tr>
+                                            <td><strong>@supplier.Name</strong></td>
+                                            <td>@supplier.Email</td>
+                                            <td>@supplier.Phone</td>
+                                            <td>@supplier.Address</td>
+                                            <td>
+                                                <span class="badge bg-info">@(supplier.Products?.Count ?? 0) products</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-primary rounded-2xl" @onclick="() => EditSupplier(supplier)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-info rounded-2xl" @onclick="() => ViewProducts(supplier)">
+                                                        <i class="bi bi-box-seam"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger rounded-2xl" @onclick="() => DeleteSupplier(supplier)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-truck fs-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No suppliers found</h4>
+                            <p class="text-muted">Start by adding your first supplier to the system.</p>
+                            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
+                                <i class="bi bi-plus-circle me-2"></i>Add First Supplier
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Supplier> SupplierList { get; set; } = new();
+    private string SearchTerm { get; set; } = "";
+    private bool ShowAddModal { get; set; } = false;
+    private Supplier CurrentSupplier { get; set; } = new();
+    private bool IsEditing { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        SupplierList = await Context.Suppliers.Include(s => s.Products).ToListAsync();
+    }
+
+    private IEnumerable<Supplier> FilteredSuppliers => 
+        SupplierList.Where(s => string.IsNullOrEmpty(SearchTerm) || 
+                           s.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                           s.Email.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private void EditSupplier(Supplier supplier)
+    {
+        CurrentSupplier = new Supplier
+        {
+            SupplierId = supplier.SupplierId,
+            Name = supplier.Name,
+            Email = supplier.Email,
+            Phone = supplier.Phone,
+            Address = supplier.Address
+        };
+        IsEditing = true;
+        ShowAddModal = true;
+    }
+
+    private void ViewProducts(Supplier supplier)
+    {
+        // TODO: Navigate to products page filtered by supplier
+    }
+
+    private async Task DeleteSupplier(Supplier supplier)
+    {
+        // TODO: Add confirmation dialog
+        Context.Suppliers.Remove(supplier);
+        await Context.SaveChangesAsync();
+        await LoadData();
+    }
+} 
