@@ -1,0 +1,113 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+parameters:
+  - name: azureServiceConnection
+    displayName: Azure service connection (ARM)
+    type: string
+    default: AzureServiceConnection
+  - name: webAppName
+    displayName: Azure Web App name
+    type: string
+    default: inventorymanager-appservice
+  - name: targetOS
+    displayName: Target OS (Linux or Windows)
+    type: string
+    default: Linux
+    values:
+      - Linux
+      - Windows
+
+variables:
+  buildConfiguration: Release
+  projectFile: InventoryManager.csproj
+  publishDir: $(Build.ArtifactStagingDirectory)/webapp
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Build
+    displayName: Build and Publish
+    jobs:
+      - job: Build
+        displayName: Build
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            displayName: Use .NET SDK 9.x
+            inputs:
+              packageType: sdk
+              version: 9.0.x
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore
+            inputs:
+              command: restore
+              projects: $(projectFile)
+
+          - task: DotNetCoreCLI@2
+            displayName: Build ($(buildConfiguration))
+            inputs:
+              command: build
+              projects: $(projectFile)
+              arguments: --configuration $(buildConfiguration) --no-restore
+
+          - task: DotNetCoreCLI@2
+            displayName: Publish Web
+            inputs:
+              command: publish
+              publishWebProjects: false
+              projects: $(projectFile)
+              arguments: --configuration $(buildConfiguration) --output $(publishDir) --no-build
+              zipAfterPublish: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Artifact
+            inputs:
+              PathtoPublish: $(publishDir)
+              ArtifactName: drop
+              publishLocation: Container
+
+  - stage: Deploy
+    displayName: Deploy to Azure Web App
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployWeb
+        displayName: Deploy
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: drop
+
+                # Linux App Service
+                - ${{ if eq(parameters.targetOS, 'Linux') }}:
+                    - task: AzureWebApp@1
+                      displayName: Deploy to Linux Web App
+                      inputs:
+                        azureSubscription: ${{ parameters.azureServiceConnection }}
+                        appName: ${{ parameters.webAppName }}
+                        appType: webAppLinux
+                        package: $(Pipeline.Workspace)/drop/**/*.zip
+
+                # Windows App Service
+                - ${{ if eq(parameters.targetOS, 'Windows') }}:
+                    - task: AzureWebApp@1
+                      displayName: Deploy to Windows Web App
+                      inputs:
+                        azureSubscription: ${{ parameters.azureServiceConnection }}
+                        appName: ${{ parameters.webAppName }}
+                        appType: webApp
+                        package: $(Pipeline.Workspace)/drop/**/*.zip
