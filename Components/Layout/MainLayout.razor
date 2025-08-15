@@ -15,7 +15,7 @@
     </AuthorizeView>
 
     <main class="@(IsAuthenticated ? "" : "full-width")">
-        <div class="top-row px-4">
+        <nav class="top-row px-4">
             <AuthorizeView>
                 <Authorized>
                     <div class="d-flex align-items-center">
@@ -27,10 +27,27 @@
                     </div>
                 </Authorized>
                 <NotAuthorized>
-                    <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+                <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="navbar-brand d-flex align-items-center">
+                 <a href="/">
+                    <img src="/favicon.png" alt="Inventory Manager Logo" class="navbar-logo me-2" />
+                    <span class="brand-text text-black fw-bold fs-4 text-decoration-none">Inventory Manager</span>
+                 </a>
+                </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="login" class="btn btn-primary rounded-2xl shadow-md">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Sign In
+                        </a>
+                        <a href="register" class="btn btn-outline-primary rounded-2xl">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Register
+                        </a>
+                    </div>
+                </div>
                 </NotAuthorized>
             </AuthorizeView>
-        </div>
+        </nav>
 
         <article class="content px-4">
             @Body

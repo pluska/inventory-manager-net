@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Box/Container -->
+  <rect x="4" y="8" width="24" height="16" rx="2" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Inventory lines -->
+  <line x1="8" y1="12" x2="24" y2="12" stroke="white" stroke-width="1.5"/>
+  <line x1="8" y1="16" x2="20" y2="16" stroke="white" stroke-width="1.5"/>
+  <line x1="8" y1="20" x2="22" y2="20" stroke="white" stroke-width="1.5"/>
+  
+  <!-- Plus sign for add/management -->
+  <circle cx="26" cy="10" r="3" stroke="white" stroke-width="1.5" fill="none"/>
+  <line x1="26" y1="8.5" x2="26" y2="11.5" stroke="white" stroke-width="1.5"/>
+  <line x1="24.5" y1="10" x2="27.5" y2="10" stroke="white" stroke-width="1.5"/>
+</svg>

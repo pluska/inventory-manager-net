@@ -9,20 +9,22 @@
                     var isPublicPage = routeData.PageType.Name.Contains("Auth") || 
                                       routeData.PageType.Name.Contains("Login") || 
                                       routeData.PageType.Name.Contains("Register") ||
-                                      routeData.PageType.Name.Contains("Logout") ||
                                       routeData.PageType.Name.Contains("AccessDenied") ||
                                       routeData.PageType.Name.Contains("ForgotPassword") ||
                                       routeData.PageType.Name.Contains("ResetPassword") ||
                                       routeData.PageType.Name.Contains("Home");
                     
-                    if (isPublicPage)
+                    // Allow authenticated users to access logout
+                    var isLogoutPage = routeData.PageType.Name.Contains("Logout");
+                    
+                    if (isPublicPage && !isLogoutPage)
                     {
-                        <!-- Authenticated users trying to access public pages - redirect to dashboard -->
+                        <!-- Authenticated users trying to access public pages (except logout) - redirect to dashboard -->
                         <RedirectToDashboard />
                     }
                     else
                     {
-                        <!-- Authenticated users accessing protected routes - show them -->
+                        <!-- Authenticated users accessing protected routes or logout - show them -->
                         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
                         <FocusOnNavigate RouteData="routeData" Selector="h1" />
                     }

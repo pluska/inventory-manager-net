@@ -1,53 +1,55 @@
 @page "/logout"
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Identity
+@rendermode InteractiveServer
 @attribute [AllowAnonymous]
 @inject NavigationManager Navigation
+@inject SignInManager<IdentityUser> SignInManager
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Logout - Inventory Manager</PageTitle>
 
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card rounded-2xl shadow-lg mt-5">
-                <div class="card-header bg-secondary text-white text-center py-4">
-                    <h3 class="mb-0">Sign Out</h3>
-                    <p class="mb-0 text-white-50">Are you sure you want to logout?</p>
-                </div>
-                
-                <div class="card-body p-4 text-center">
-                    <p class="mb-4">You will be signed out of your account.</p>
-                    
-                    <div class="d-grid gap-2">
-                        <button @onclick="LogoutNow" class="btn btn-danger rounded-2xl py-2">
-                            <i class="bi bi-box-arrow-right me-2"></i>Yes, Sign Out
-                        </button>
-                        <a href="/" class="btn btn-outline-secondary rounded-2xl">
-                            <i class="bi bi-arrow-left me-2"></i>Cancel
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row justify-content-center">
+		<div class="col-md-6 col-lg-4">
+			<div class="card rounded-2xl shadow-lg mt-5">
+				<div class="card-header bg-secondary text-white text-center py-4">
+					<h3 class="mb-0">Sign Out</h3>
+					<p class="mb-0 text-white-50">Are you sure you want to logout?</p>
+				</div>
+				
+				<div class="card-body p-4 text-center">
+					<p class="mb-4">You will be signed out of your account.</p>
+					
+					<div class="d-grid gap-2">
+						<button @onclick="LogoutNow" class="btn btn-danger rounded-2xl py-2">
+							<i class="bi bi-box-arrow-right me-2"></i>Yes, Sign Out
+						</button>
+						<a href="/dashboard" class="btn btn-outline-secondary rounded-2xl">
+							<i class="bi bi-arrow-left me-2"></i>Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 @code {
-    private async Task LogoutNow()
-    {
-        try
-        {
-            // Use a simple JavaScript function call to logout
-            await JSRuntime.InvokeVoidAsync("logoutUser");
-            
-            // Redirect to home after logout
-            Navigation.NavigateTo("/", replace: true, forceLoad: true);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Logout failed: {ex.Message}");
-            // Fallback: redirect to home
-            Navigation.NavigateTo("/", replace: true, forceLoad: true);
-        }
-    }
+	private async Task LogoutNow()
+	{
+		try
+		{
+			// Use JavaScript to clear authentication and redirect
+			await JSRuntime.InvokeVoidAsync("performLogout");
+		}
+		catch
+		{
+			// Fallback: redirect to home
+			Navigation.NavigateTo("/", replace: true, forceLoad: true);
+		}
+	}
 }

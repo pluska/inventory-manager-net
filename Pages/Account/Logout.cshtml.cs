@@ -23,14 +23,32 @@ public class LogoutModel : PageModel
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out");
             
-            // Redirect to home page after logout
-            return RedirectToPage("/Index");
+            // Redirect to login page after logout
+            return Redirect("/login");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during logout");
-            // In case of error, redirect to home anyway
-            return RedirectToPage("/Index");
+            // In case of error, redirect to login anyway
+            return Redirect("/login");
+        }
+    }
+
+    public async Task<IActionResult> OnPost()
+    {
+        try
+        {
+            await _signInManager.SignOutAsync();
+            _logger.LogInformation("User logged out via POST");
+            
+            // Redirect to login page after logout
+            return Redirect("/login");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during logout via POST");
+            // In case of error, redirect to login anyway
+            return Redirect("/login");
         }
     }
 }

@@ -3,8 +3,13 @@
 @inject SignInManager<IdentityUser> SignInManager
 
 <div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Inventory Manager</a>
+    <div class="container-fluid d-flex align-items-center">
+        <div class="navbar-brand d-flex align-items-center">
+            <a href="" class="d-flex align-items-center text-decoration-none">
+                <img src="/logo.svg" alt="Inventory Manager Logo" class="navbar-logo me-2" />
+                <span class="brand-text">Inventory Manager</span>
+            </a>
+        </div>
     </div>
 </div>
 
@@ -14,9 +19,10 @@
     <nav class="nav flex-column">
         <AuthorizeView>
             <Authorized>
+
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="dashboard" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
+                        <span class="bi bi-speedometer2-nav-menu" aria-hidden="true"></span> Dashboard
                     </NavLink>
                 </div>
 
@@ -45,6 +51,11 @@
                 </div>
             </Authorized>
             <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
                 <div class="nav-item px-3">
                     <a class="nav-link text-primary" href="/login">
                         <span class="bi bi-box-arrow-in-right me-2"></span> Sign In Required
