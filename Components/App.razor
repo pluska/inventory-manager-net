@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@namespace InventoryManager.Components
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -14,8 +17,11 @@
 </head>
 
 <body>
-    <Routes />
+    <CascadingAuthenticationState>
+        <Routes />
+    </CascadingAuthenticationState>
     <script src="_framework/blazor.web.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 
 </html>

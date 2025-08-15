@@ -1,0 +1,132 @@
+@using InventoryManager.Data.Entities
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show" @onclick="CloseModal"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-2xl shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        @if (IsEditing)
+                        {
+                            <span>Edit Stock Movement</span>
+                        }
+                        else
+                        {
+                            <span>Record Stock Movement</span>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                </div>
+                
+                <EditForm Model="Movement" OnValidSubmit="HandleSubmit" class="modal-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="product" class="form-label">Product <span class="text-danger">*</span></label>
+                            <InputSelect id="product" class="form-select rounded-2xl" @bind-Value="Movement.ProductId">
+                                <option value="">Select a product...</option>
+                                @foreach (var product in Products)
+                                {
+                                    <option value="@product.ProductId">@product.Name (@product.SKU)</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Movement.ProductId)" />
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="movementType" class="form-label">Movement Type <span class="text-danger">*</span></label>
+                            <InputSelect id="movementType" class="form-select rounded-2xl" @bind-Value="Movement.MovementType">
+                                <option value="@MovementType.IN">Stock In (+)</option>
+                                <option value="@MovementType.OUT">Stock Out (-)</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Movement.MovementType)" />
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <InputNumber id="quantity" class="form-control rounded-2xl" @bind-Value="Movement.Quantity" />
+                            <ValidationMessage For="@(() => Movement.Quantity)" />
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="userId" class="form-label">Performed By <span class="text-danger">*</span></label>
+                            <InputSelect id="userId" class="form-select rounded-2xl" @bind-Value="Movement.UserId">
+                                <option value="">Select who performed this action...</option>
+                                <option value="warehouse-staff">Warehouse Staff</option>
+                                <option value="supervisor">Supervisor</option>
+                                <option value="sales-team">Sales Team</option>
+                                <option value="admin">Administrator</option>
+                                <option value="system">System</option>
+                                <option value="external">External User</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Movement.UserId)" />
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rounded-2xl" @onclick="CloseModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary rounded-2xl">
+                            @if (IsEditing)
+                            {
+                                <span>Update Movement</span>
+                            }
+                            else
+                            {
+                                <span>Record Movement</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public StockMovement Movement { get; set; } = new();
+    [Parameter] public List<Product> Products { get; set; } = new();
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public EventCallback<StockMovement> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!IsEditing)
+        {
+            Movement = new StockMovement
+            {
+                ProductId = 0,
+                MovementType = MovementType.IN,
+                Quantity = 0,
+                UserId = "warehouse-staff",
+                Timestamp = DateTime.Now
+            };
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (OnSave.HasDelegate)
+        {
+            await OnSave.InvokeAsync(Movement);
+        }
+        await CloseModal();
+    }
+
+    private async Task CloseModal()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}

@@ -1,0 +1,134 @@
+@using InventoryManager.Data.Entities
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show" @onclick="CloseModal"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-2xl shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    @if (IsEditing)
+                    {
+                        <span>Edit Product</span>
+                    }
+                    else
+                    {
+                        <span>Add New Product</span>
+                    }
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+            </div>
+            
+            <EditForm Model="Product" OnValidSubmit="HandleSubmit" class="modal-body">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="sku" class="form-label">SKU <span class="text-danger">*</span></label>
+                        <InputText id="sku" class="form-control rounded-2xl" @bind-Value="Product.SKU" />
+                        <ValidationMessage For="@(() => Product.SKU)" />
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                        <InputText id="name" class="form-control rounded-2xl" @bind-Value="Product.Name" />
+                        <ValidationMessage For="@(() => Product.Name)" />
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                        <InputNumber id="price" class="form-control rounded-2xl" @bind-Value="Product.Price" />
+                        <ValidationMessage For="@(() => Product.Price)" />
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="stock" class="form-label">Current Stock <span class="text-danger">*</span></label>
+                        <InputNumber id="stock" class="form-control rounded-2xl" @bind-Value="Product.Stock" />
+                        <ValidationMessage For="@(() => Product.Stock)" />
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="minStock" class="form-label">Minimum Stock <span class="text-danger">*</span></label>
+                        <InputNumber id="minStock" class="form-control rounded-2xl" @bind-Value="Product.MinimumStock" />
+                        <ValidationMessage For="@(() => Product.MinimumStock)" />
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="supplier" class="form-label">Supplier</label>
+                        <InputSelect id="supplier" class="form-select rounded-2xl" @bind-Value="Product.SupplierId">
+                            <option value="">Select a supplier...</option>
+                            @foreach (var supplier in Suppliers)
+                            {
+                                <option value="@supplier.SupplierId">@supplier.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-2xl" @onclick="CloseModal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary rounded-2xl">
+                        @if (IsEditing)
+                        {
+                            <span>Update Product</span>
+                        }
+                        else
+                        {
+                            <span>Add Product</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Product Product { get; set; } = new();
+    [Parameter] public List<Supplier> Suppliers { get; set; } = new();
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public EventCallback<Product> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!IsEditing)
+        {
+            Product = new Product
+            {
+                SKU = "",
+                Name = "",
+                Price = 0,
+                Stock = 0,
+                MinimumStock = 0
+            };
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (OnSave.HasDelegate)
+        {
+            await OnSave.InvokeAsync(Product);
+        }
+        await CloseModal();
+    }
+
+    private async Task CloseModal()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}

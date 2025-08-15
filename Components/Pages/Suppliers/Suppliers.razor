@@ -2,7 +2,13 @@
 @using InventoryManager.Data
 @using InventoryManager.Data.Entities
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
 @inject ApplicationDbContext Context
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+@rendermode InteractiveServer
 
 <PageTitle>Suppliers - Inventory Manager</PageTitle>
 
@@ -13,8 +19,8 @@
                 <h1 class="display-5 text-primary">Suppliers</h1>
                 <p class="lead">Manage your product suppliers</p>
             </div>
-            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
-                <i class="bi bi-plus-circle me-2"></i>Add Supplier
+            <button class="btn btn-primary rounded-2xl" @onclick="OpenAddModal">
+                Add Supplier
             </button>
         </div>
     </div>
@@ -31,7 +37,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control rounded-2xl" placeholder="Search suppliers..." @bind="SearchTerm" @bind:event="oninput" />
                                 <button class="btn btn-outline-secondary rounded-2xl" type="button">
-                                    <i class="bi bi-search"></i>
+                                    Search
                                 </button>
                             </div>
                         </div>
@@ -65,15 +71,15 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <button class="btn btn-sm btn-outline-primary rounded-2xl" @onclick="() => EditSupplier(supplier)">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-info rounded-2xl" @onclick="() => ViewProducts(supplier)">
-                                                        <i class="bi bi-box-seam"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger rounded-2xl" @onclick="() => DeleteSupplier(supplier)">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
+                                                                                    <button class="btn btn-sm btn-outline-primary rounded-2xl" @onclick="() => EditSupplier(supplier)">
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline-info rounded-2xl" @onclick="() => ViewProducts(supplier)">
+                                    View Products
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-2xl" @onclick="() => DeleteSupplier(supplier)">
+                                    Delete
+                                </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -88,8 +94,8 @@
                             <i class="bi bi-truck fs-1 text-muted"></i>
                             <h4 class="text-muted mt-3">No suppliers found</h4>
                             <p class="text-muted">Start by adding your first supplier to the system.</p>
-                            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
-                                <i class="bi bi-plus-circle me-2"></i>Add First Supplier
+                            <button class="btn btn-primary rounded-2xl" @onclick="OpenAddModal">
+                                Add First Supplier
                             </button>
                         </div>
                     }
@@ -98,6 +104,16 @@
         </div>
     </div>
 </div>
+
+@if (ShowAddModal)
+{
+    <SupplierModal 
+        IsVisible="ShowAddModal"
+        Supplier="CurrentSupplier"
+        IsEditing="IsEditing"
+        OnSave="HandleSaveSupplier"
+        OnClose="CloseModal" />
+}
 
 @code {
     private List<Supplier> SupplierList { get; set; } = new();
@@ -137,14 +153,54 @@
 
     private void ViewProducts(Supplier supplier)
     {
-        // TODO: Navigate to products page filtered by supplier
+        Navigation.NavigateTo($"/products?supplierId={supplier.SupplierId}");
     }
 
     private async Task DeleteSupplier(Supplier supplier)
     {
-        // TODO: Add confirmation dialog
-        Context.Suppliers.Remove(supplier);
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{supplier.Name}'? This action cannot be undone."))
+        {
+            Context.Suppliers.Remove(supplier);
+            await Context.SaveChangesAsync();
+            await LoadData();
+        }
+    }
+
+    private void OpenAddModal()
+    {
+        ShowAddModal = true;
+        IsEditing = false;
+        CurrentSupplier = new Supplier();
+        StateHasChanged();
+    }
+
+    private async Task HandleSaveSupplier(Supplier supplier)
+    {
+        if (IsEditing)
+        {
+            var existingSupplier = await Context.Suppliers.FindAsync(supplier.SupplierId);
+            if (existingSupplier != null)
+            {
+                existingSupplier.Name = supplier.Name;
+                existingSupplier.Email = supplier.Email;
+                existingSupplier.Phone = supplier.Phone;
+                existingSupplier.Address = supplier.Address;
+            }
+        }
+        else
+        {
+            Context.Suppliers.Add(supplier);
+        }
+        
         await Context.SaveChangesAsync();
         await LoadData();
+        CloseModal();
+    }
+
+    private void CloseModal()
+    {
+        ShowAddModal = false;
+        IsEditing = false;
+        CurrentSupplier = new Supplier();
     }
 } 

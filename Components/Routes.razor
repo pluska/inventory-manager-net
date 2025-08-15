@@ -1,6 +1,63 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        <AuthorizeView>
+            <Authorized>
+                @{
+                    var isPublicPage = routeData.PageType.Name.Contains("Auth") || 
+                                      routeData.PageType.Name.Contains("Login") || 
+                                      routeData.PageType.Name.Contains("Register") ||
+                                      routeData.PageType.Name.Contains("Logout") ||
+                                      routeData.PageType.Name.Contains("AccessDenied") ||
+                                      routeData.PageType.Name.Contains("ForgotPassword") ||
+                                      routeData.PageType.Name.Contains("ResetPassword") ||
+                                      routeData.PageType.Name.Contains("Home");
+                    
+                    if (isPublicPage)
+                    {
+                        <!-- Authenticated users trying to access public pages - redirect to dashboard -->
+                        <RedirectToDashboard />
+                    }
+                    else
+                    {
+                        <!-- Authenticated users accessing protected routes - show them -->
+                        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+                    }
+                }
+            </Authorized>
+            <NotAuthorized>
+                @{
+                    var isAuthPage = routeData.PageType.Name.Contains("Auth") || 
+                                    routeData.PageType.Name.Contains("Login") || 
+                                    routeData.PageType.Name.Contains("Register") ||
+                                    routeData.PageType.Name.Contains("Logout") ||
+                                    routeData.PageType.Name.Contains("AccessDenied") ||
+                                    routeData.PageType.Name.Contains("ForgotPassword") ||
+                                    routeData.PageType.Name.Contains("ResetPassword") ||
+                                    routeData.PageType.Name.Contains("Home");
+                    
+                    if (isAuthPage)
+                    {
+                        <!-- Public auth pages - show them -->
+                        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+                    }
+                    else
+                    {
+                        <!-- Protected routes - redirect to login -->
+                        <RedirectToLogin />
+                    }
+                }
+            </NotAuthorized>
+        </AuthorizeView>
     </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
 </Router>

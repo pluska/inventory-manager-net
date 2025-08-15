@@ -1,0 +1,108 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [AllowAnonymous]
+@inject IAntiforgery Antiforgery
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Login - Inventory Manager</PageTitle>
+
+@if (isAuthenticated)
+{
+    <div class="text-center py-5">
+        <div class="alert alert-info border-info rounded-2xl shadow-lg mx-auto" style="max-width: 500px;">
+            <h4 class="mb-3">🔐 Already Logged In</h4>
+            <p class="mb-4">You are already authenticated. Redirecting to dashboard...</p>
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card rounded-2xl shadow-lg mt-5">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h3 class="mb-0">Sign In</h3>
+                        <p class="mb-0 text-white-50">Access your inventory system</p>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <form method="post" action="/Account/Login">
+                            <!-- Token anti-CSRF -->
+                            <input type="hidden" name="__RequestVerificationToken" value="@_antiforgeryToken" />
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" id="email" name="Email" class="form-control rounded-2xl" 
+                                       placeholder="Enter your email" required />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="Password" class="form-control rounded-2xl" 
+                                       placeholder="Enter your password" required />
+                                <div class="text-end mt-1">
+                                    <a href="/forgot-password" class="text-decoration-none small">Forgot Password?</a>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe" name="RememberMe" value="true" />
+                                <label class="form-check-label" for="rememberMe">
+                                    Remember me
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary rounded-2xl py-2">
+                                    Sign In
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="text-muted mb-2">Don't have an account?</p>
+                            <a href="/register" class="btn btn-outline-primary rounded-2xl">
+                                Create Account
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string? _antiforgeryToken;
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+        
+        if (isAuthenticated)
+        {
+            // Redirect to dashboard after a short delay
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/dashboard", forceLoad: false);
+        }
+        else
+        {
+            var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext!);
+            _antiforgeryToken = tokens.RequestToken;
+        }
+    }
+}

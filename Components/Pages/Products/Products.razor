@@ -2,7 +2,13 @@
 @using InventoryManager.Data
 @using InventoryManager.Data.Entities
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
 @inject ApplicationDbContext Context
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+@rendermode InteractiveServer
 
 <PageTitle>Products - Inventory Manager</PageTitle>
 
@@ -13,8 +19,8 @@
                 <h1 class="display-5 text-primary">Products</h1>
                 <p class="lead">Manage your inventory products</p>
             </div>
-            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
-                <i class="bi bi-plus-circle me-2"></i>Add Product
+            <button class="btn btn-primary rounded-2xl" @onclick="OpenAddModal">
+                Add Product
             </button>
         </div>
     </div>
@@ -31,7 +37,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control rounded-2xl" placeholder="Search products..." @bind="SearchTerm" @bind:event="oninput" />
                                 <button class="btn btn-outline-secondary rounded-2xl" type="button">
-                                    <i class="bi bi-search"></i>
+                                    Search
                                 </button>
                             </div>
                         </div>
@@ -81,13 +87,13 @@
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-sm btn-outline-primary rounded-2xl" @onclick="() => EditProduct(product)">
-                                                        <i class="bi bi-pencil"></i>
+                                                        Edit
                                                     </button>
                                                     <button class="btn btn-sm btn-outline-success rounded-2xl" @onclick="() => RecordMovement(product)">
-                                                        <i class="bi bi-arrow-left-right"></i>
+                                                        Move
                                                     </button>
                                                     <button class="btn btn-sm btn-outline-danger rounded-2xl" @onclick="() => DeleteProduct(product)">
-                                                        <i class="bi bi-trash"></i>
+                                                        Delete
                                                     </button>
                                                 </div>
                                             </td>
@@ -103,8 +109,8 @@
                             <i class="bi bi-box-seam fs-1 text-muted"></i>
                             <h4 class="text-muted mt-3">No products found</h4>
                             <p class="text-muted">Start by adding your first product to the inventory.</p>
-                            <button class="btn btn-primary rounded-2xl" @onclick="() => ShowAddModal = true">
-                                <i class="bi bi-plus-circle me-2"></i>Add First Product
+                            <button class="btn btn-primary rounded-2xl" @onclick="OpenAddModal">
+                                Add First Product
                             </button>
                         </div>
                     }
@@ -113,6 +119,17 @@
         </div>
     </div>
 </div>
+
+@if (ShowAddModal)
+{
+    <ProductModal 
+        IsVisible="ShowAddModal"
+        Product="CurrentProduct"
+        Suppliers="SupplierList"
+        IsEditing="IsEditing"
+        OnSave="HandleSaveProduct"
+        OnClose="CloseModal" />
+}
 
 @code {
     private List<Product> ProductList { get; set; } = new();
@@ -124,8 +141,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine("Products component initialized");
         await LoadData();
     }
+
+
 
     private async Task LoadData()
     {
@@ -156,14 +176,60 @@
 
     private async Task DeleteProduct(Product product)
     {
-        // TODO: Add confirmation dialog
-        Context.Products.Remove(product);
-        await Context.SaveChangesAsync();
-        await LoadData();
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{product.Name}'? This action cannot be undone."))
+        {
+            Context.Products.Remove(product);
+            await Context.SaveChangesAsync();
+            await LoadData();
+        }
     }
 
     private void RecordMovement(Product product)
     {
         // TODO: Navigate to stock movement page
+        Navigation.NavigateTo($"/stock-movements?productId={product.ProductId}");
+    }
+
+    private async Task HandleSaveProduct(Product product)
+    {
+        if (IsEditing)
+        {
+            var existingProduct = await Context.Products.FindAsync(product.ProductId);
+            if (existingProduct != null)
+            {
+                existingProduct.Name = product.Name;
+                existingProduct.SKU = product.SKU;
+                existingProduct.Price = product.Price;
+                existingProduct.Stock = product.Stock;
+                existingProduct.MinimumStock = product.MinimumStock;
+                existingProduct.SupplierId = product.SupplierId;
+            }
+        }
+        else
+        {
+            Context.Products.Add(product);
+        }
+        
+        await Context.SaveChangesAsync();
+        await LoadData();
+        CloseModal();
+    }
+
+    private void OpenAddModal()
+    {
+        ShowAddModal = true;
+        IsEditing = false;
+        CurrentProduct = new Product();
+        StateHasChanged();
+    }
+
+
+
+    private void CloseModal()
+    {
+        ShowAddModal = false;
+        IsEditing = false;
+        CurrentProduct = new Product();
+        StateHasChanged();
     }
 } 

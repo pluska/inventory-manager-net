@@ -1,0 +1,113 @@
+@using InventoryManager.Data.Entities
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show" @onclick="CloseModal"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-2xl shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        @if (IsEditing)
+                        {
+                            <span>Edit Supplier</span>
+                        }
+                        else
+                        {
+                            <span>Add New Supplier</span>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                </div>
+                
+                <EditForm Model="Supplier" OnValidSubmit="HandleSubmit" class="modal-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Supplier Name <span class="text-danger">*</span></label>
+                            <InputText id="name" class="form-control rounded-2xl" @bind-Value="Supplier.Name" />
+                            <ValidationMessage For="@(() => Supplier.Name)" />
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <InputText id="email" class="form-control rounded-2xl" @bind-Value="Supplier.Email" />
+                            <ValidationMessage For="@(() => Supplier.Email)" />
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <InputText id="phone" class="form-control rounded-2xl" @bind-Value="Supplier.Phone" />
+                            <ValidationMessage For="@(() => Supplier.Phone)" />
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <InputText id="address" class="form-control rounded-2xl" @bind-Value="Supplier.Address" />
+                            <ValidationMessage For="@(() => Supplier.Address)" />
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rounded-2xl" @onclick="CloseModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary rounded-2xl">
+                            @if (IsEditing)
+                            {
+                                <span>Update Supplier</span>
+                            }
+                            else
+                            {
+                                <span>Add Supplier</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Supplier Supplier { get; set; } = new();
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public EventCallback<Supplier> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!IsEditing)
+        {
+            Supplier = new Supplier
+            {
+                Name = "",
+                Email = "",
+                Phone = "",
+                Address = ""
+            };
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (OnSave.HasDelegate)
+        {
+            await OnSave.InvokeAsync(Supplier);
+        }
+        await CloseModal();
+    }
+
+    private async Task CloseModal()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}

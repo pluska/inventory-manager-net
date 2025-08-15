@@ -58,11 +58,8 @@ public class ApplicationDbContext : IdentityDbContext
                   .HasForeignKey(e => e.ProductId)
                   .OnDelete(DeleteBehavior.Cascade);
             
-            // Relationship with User
-            entity.HasOne(e => e.User)
-                  .WithMany()
-                  .HasForeignKey(e => e.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
+            // UserId is just a string field, no foreign key relationship
+
         });
     }
 } 

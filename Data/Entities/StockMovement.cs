@@ -31,5 +31,4 @@ public class StockMovement
     
     // Navigation properties
     public virtual Product Product { get; set; } = null!;
-    public virtual Microsoft.AspNetCore.Identity.IdentityUser User { get; set; } = null!;
 } 

@@ -1,0 +1,91 @@
+@page "/register"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Register - Inventory Manager</PageTitle>
+
+@if (isAuthenticated)
+{
+    <div class="text-center py-5">
+        <div class="alert alert-info border-info rounded-2xl shadow-lg mx-auto" style="max-width: 500px;">
+            <h4 class="mb-3">🔐 Already Logged In</h4>
+            <p class="mb-4">You are already authenticated. Redirecting to dashboard...</p>
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card rounded-2xl shadow-lg mt-5">
+                    <div class="card-header bg-success text-white text-center py-4">
+                        <h3 class="mb-0">Create Account</h3>
+                        <p class="mb-0 text-white-50">Join our inventory management system</p>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <form method="post" action="/Account/Register">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" id="email" name="Email" class="form-control rounded-2xl" 
+                                       placeholder="Enter your email" required />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="Password" class="form-control rounded-2xl" 
+                                       placeholder="Create a password" required />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" id="confirmPassword" name="ConfirmPassword" class="form-control rounded-2xl" 
+                                       placeholder="Confirm your password" required />
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success rounded-2xl py-2">
+                                    Create Account
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="text-muted mb-2">Already have an account?</p>
+                            <a href="/login" class="btn btn-outline-success rounded-2xl">
+                                Sign In
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+        
+        if (isAuthenticated)
+        {
+            // Redirect to dashboard after a short delay
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/dashboard", forceLoad: false);
+        }
+    }
+}

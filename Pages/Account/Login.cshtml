@@ -1,0 +1,63 @@
+@page "/Account/Login"
+@model InventoryManager.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card rounded-2xl shadow-lg mt-5">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">Sign In</h3>
+                    <p class="mb-0 text-white-50">Access your inventory system</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="Email" class="form-control rounded-2xl" 
+                                   placeholder="Enter your email" value="@Model.Email" required />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="Password" class="form-control rounded-2xl" 
+                                   placeholder="Enter your password" required />
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="RememberMe" value="true" @(Model.RememberMe ? "checked" : "") />
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary rounded-2xl py-2">
+                                Sign In
+                            </button>
+                        </div>
+                    </form>
+                    
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger mt-3 rounded-2xl">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Don't have an account?</p>
+                        <a href="/register" class="btn btn-outline-primary rounded-2xl">
+                            Create Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

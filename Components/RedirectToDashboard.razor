@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@namespace InventoryManager.Components
+
+<div class="text-center py-5">
+    <div class="alert alert-info border-info rounded-2xl shadow-lg mx-auto" style="max-width: 500px;">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-info-circle fs-1 text-info me-3"></i>
+            <div>
+                <h4 class="mb-1">🔐 Already Authenticated</h4>
+                <p class="mb-0 text-muted">You are already logged in</p>
+            </div>
+        </div>
+        
+        <div class="text-start mb-4">
+            <p class="mb-2"><strong>Why am I being redirected?</strong></p>
+            <ul class="mb-0 ps-3">
+                <li>You are already signed in to the system</li>
+                <li>Login, register, and other auth pages are not needed</li>
+                <li>You will be redirected to your dashboard</li>
+            </ul>
+        </div>
+        
+        <div class="d-grid gap-2">
+            <a href="/dashboard" class="btn btn-info rounded-2xl text-decoration-none">
+                <i class="bi bi-arrow-right me-2"></i>Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Redirect to dashboard after a short delay
+        await Task.Delay(2000);
+        Navigation.NavigateTo("/dashboard", forceLoad: false);
+    }
+}

@@ -2,7 +2,10 @@
 @using InventoryManager.Data
 @using InventoryManager.Data.Entities
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
 @inject ApplicationDbContext Context
+@attribute [Authorize]
 
 <PageTitle>Reports - Inventory Manager</PageTitle>
 

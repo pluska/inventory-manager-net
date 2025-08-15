@@ -1,0 +1,18 @@
+@page "/Test"
+@{
+    ViewData["Title"] = "Test Page";
+}
+
+<h1>Test Page</h1>
+<p>This is a test page to verify Razor Pages routing is working.</p>
+
+<form method="post">
+    <input type="text" name="testInput" value="test value" />
+    <button type="submit">Submit Test</button>
+</form>
+
+@if (Request.Method == "POST")
+{
+    <p>Form was submitted successfully!</p>
+    <p>Test input value: @Request.Form["testInput"]</p>
+}

@@ -1,4 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@inject SignInManager<IdentityUser> SignInManager
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Inventory Manager</a>
     </div>
@@ -8,35 +12,51 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="dashboard" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="products">
-                <span class="bi bi-box-seam-fill-nav-menu" aria-hidden="true"></span> Products
-            </NavLink>
-        </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="products">
+                        <span class="bi bi-box-seam-fill-nav-menu" aria-hidden="true"></span> Products
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="suppliers">
-                <span class="bi bi-truck-fill-nav-menu" aria-hidden="true"></span> Suppliers
-            </NavLink>
-        </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="suppliers">
+                        <span class="bi bi-truck-fill-nav-menu" aria-hidden="true"></span> Suppliers
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="stock-movements">
-                <span class="bi bi-arrow-left-right-nav-menu" aria-hidden="true"></span> Stock Movements
-            </NavLink>
-        </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="stock-movements">
+                        <span class="bi bi-arrow-left-right-nav-menu" aria-hidden="true"></span> Stock Movements
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="reports">
-                <span class="bi bi-graph-up-nav-menu" aria-hidden="true"></span> Reports
-            </NavLink>
-        </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="reports">
+                        <span class="bi bi-graph-up-nav-menu" aria-hidden="true"></span> Reports
+                    </NavLink>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <a class="nav-link text-primary" href="/login">
+                        <span class="bi bi-box-arrow-in-right me-2"></span> Sign In Required
+                    </a>
+                </div>
+                <div class="nav-item px-3">
+                    <a class="nav-link text-secondary" href="/register">
+                        <span class="bi bi-person-plus me-2"></span> Create Account
+                    </a>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
 
