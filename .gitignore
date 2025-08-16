@@ -8,6 +8,9 @@ publish.zip
 *.suo
 *.userprefs
 
+# Production configuration files (contain sensitive data)
+appsettings.Production.json
+
 # Database
 *.db
 *.db-shm
