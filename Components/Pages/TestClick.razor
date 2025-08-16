@@ -1,45 +1,119 @@
-@page "/test-click"
+@page "/test-db"
+@using InventoryManager.Data
+@using InventoryManager.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@rendermode InteractiveServer
 
-<PageTitle>Test Click</PageTitle>
+<PageTitle>Database Test - Inventory Manager</PageTitle>
 
 <div class="container mt-4">
-    <h1>Click Test Page</h1>
+    <h1>Database Connection Test</h1>
     
-    <div class="row">
-        <div class="col-md-6">
-            <h3>Blazor Click Handlers</h3>
-            <button class="btn btn-primary me-2" @onclick="IncrementCount">
-                Blazor Click (Count: @Count)
-            </button>
-            <button class="btn btn-secondary me-2" @onclick="() => Count = 0">
-                Reset Count
-            </button>
+    @if (IsLoading)
+    {
+        <div class="alert alert-info">Testing database connection...</div>
+    }
+    else if (HasError)
+    {
+        <div class="alert alert-danger">
+            <h4>Error occurred:</h4>
+            <p>@ErrorMessage</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success">
+            <h4>Database Test Results:</h4>
+            <ul>
+                <li><strong>Connection:</strong> ✅ Working</li>
+                <li><strong>Products Table:</strong> @(ProductsCount) records</li>
+                <li><strong>Suppliers Table:</strong> @(SuppliersCount) records</li>
+                <li><strong>Stock Movements Table:</strong> @(StockMovementsCount) records</li>
+            </ul>
         </div>
         
-        <div class="col-md-6">
-            <h3>HTML Click Handlers</h3>
-            <button class="btn btn-success me-2" onclick="alert('HTML onclick works!')">
-                HTML Click
-            </button>
-            <button class="btn btn-warning" onclick="document.getElementById('result').innerHTML = 'HTML click worked!'">
-                Update HTML
-            </button>
-        </div>
-    </div>
+        @if (ProductsCount > 0)
+        {
+            <div class="mt-4">
+                <h3>Products Test (Simple Display)</h3>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Supplier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var product in Products)
+                            {
+                                <tr>
+                                    <td>@product.SKU</td>
+                                    <td>@product.Name</td>
+                                    <td>$@product.Price.ToString("F2")</td>
+                                    <td>@product.Stock</td>
+                                    <td>@(product.Supplier?.Name ?? "No Supplier")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
     
-    <div class="mt-4">
-        <h4>Results:</h4>
-        <div id="result">No clicks yet</div>
-        <p>Blazor Count: @Count</p>
-    </div>
+    <button class="btn btn-primary" @onclick="TestDatabase">Test Database Again</button>
 </div>
 
 @code {
-    private int Count { get; set; } = 0;
-    
-    private void IncrementCount()
+    private bool IsLoading = true;
+    private bool HasError = false;
+    private string ErrorMessage = "";
+    private int ProductsCount = 0;
+    private int SuppliersCount = 0;
+    private int StockMovementsCount = 0;
+    private List<Product> Products = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        Count++;
-        StateHasChanged();
+        await TestDatabase();
+    }
+
+    private async Task TestDatabase()
+    {
+        IsLoading = true;
+        HasError = false;
+        ErrorMessage = "";
+        
+        try
+        {
+            // Test basic connection
+            using var context = await ContextFactory.CreateDbContextAsync();
+            await context.Database.CanConnectAsync();
+            
+            // Count records in each table
+            using var context2 = await ContextFactory.CreateDbContextAsync();
+            ProductsCount = await context2.Products.CountAsync();
+            SuppliersCount = await context2.Suppliers.CountAsync();
+            StockMovementsCount = await context2.StockMovements.CountAsync();
+            
+            // Load products with suppliers
+            using var context3 = await ContextFactory.CreateDbContextAsync();
+            Products = await context3.Products.Include(p => p.Supplier).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.ToString();
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 }

@@ -4,8 +4,9 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Authorization
-@inject ApplicationDbContext Context
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @attribute [Authorize]
+@rendermode InteractiveServer
 
 <PageTitle>Reports - Inventory Manager</PageTitle>
 
@@ -188,16 +189,17 @@
 
     private async Task LoadReportData()
     {
-        var products = await Context.Products.Include(p => p.Supplier).ToListAsync();
-        var suppliers = await Context.Suppliers.ToListAsync();
-        var movements = await Context.StockMovements.ToListAsync();
+        using var context = await ContextFactory.CreateDbContextAsync();
+        var products = await context.Products.Include(p => p.Supplier).ToListAsync();
+        var suppliers = await context.Suppliers.ToListAsync();
+        var movements = await context.StockMovements.ToListAsync();
 
         LowStockProducts = products.Where(p => p.Stock <= p.MinimumStock).ToList();
         TopProductsByValue = products.OrderByDescending(p => p.Stock * p.Price).Take(5).ToList();
         
-        TotalProducts = products.Count;
-        TotalSuppliers = suppliers.Count;
-        TotalMovements = movements.Count;
-        LowStockCount = LowStockProducts.Count;
+        TotalProducts = products.Count();
+        TotalSuppliers = suppliers.Count();
+        TotalMovements = movements.Count();
+        LowStockCount = LowStockProducts.Count();
     }
 } 

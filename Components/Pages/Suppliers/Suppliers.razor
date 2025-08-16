@@ -4,7 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Authorization
-@inject ApplicationDbContext Context
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
@@ -129,7 +129,8 @@
 
     private async Task LoadData()
     {
-        SupplierList = await Context.Suppliers.Include(s => s.Products).ToListAsync();
+        using var context = await ContextFactory.CreateDbContextAsync();
+        SupplierList = await context.Suppliers.Include(s => s.Products).ToListAsync();
     }
 
     private IEnumerable<Supplier> FilteredSuppliers => 
@@ -160,8 +161,13 @@
     {
         if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{supplier.Name}'? This action cannot be undone."))
         {
-            Context.Suppliers.Remove(supplier);
-            await Context.SaveChangesAsync();
+            using var context = await ContextFactory.CreateDbContextAsync();
+            var existingSupplier = await context.Suppliers.FindAsync(supplier.SupplierId);
+            if (existingSupplier != null)
+            {
+                context.Suppliers.Remove(existingSupplier);
+                await context.SaveChangesAsync();
+            }
             await LoadData();
         }
     }
@@ -176,9 +182,10 @@
 
     private async Task HandleSaveSupplier(Supplier supplier)
     {
+        using var context = await ContextFactory.CreateDbContextAsync();
         if (IsEditing)
         {
-            var existingSupplier = await Context.Suppliers.FindAsync(supplier.SupplierId);
+            var existingSupplier = await context.Suppliers.FindAsync(supplier.SupplierId);
             if (existingSupplier != null)
             {
                 existingSupplier.Name = supplier.Name;
@@ -189,10 +196,10 @@
         }
         else
         {
-            Context.Suppliers.Add(supplier);
+            context.Suppliers.Add(supplier);
         }
         
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         await LoadData();
         CloseModal();
     }

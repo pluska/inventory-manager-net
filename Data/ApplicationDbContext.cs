@@ -62,4 +62,87 @@ public class ApplicationDbContext : IdentityDbContext
 
         });
     }
+    
+    public void SeedData()
+    {
+        // Only seed if no data exists
+        if (Products.Any() || Suppliers.Any())
+            return;
+            
+        // Add sample suppliers
+        var supplier1 = new Supplier
+        {
+            Name = "Tech Supplies Inc.",
+            Email = "info@techsupplies.com",
+            Phone = "+1-555-0123",
+            Address = "123 Tech Street, Silicon Valley, CA 94025"
+        };
+        
+        var supplier2 = new Supplier
+        {
+            Name = "Office Depot",
+            Email = "orders@officedepot.com",
+            Phone = "+1-555-0456",
+            Address = "456 Office Avenue, Business District, NY 10001"
+        };
+        
+        Suppliers.AddRange(supplier1, supplier2);
+        SaveChanges();
+        
+        // Add sample products
+        var product1 = new Product
+        {
+            Name = "Wireless Mouse",
+            SKU = "WM-001",
+            Price = 29.99m,
+            Stock = 50,
+            MinimumStock = 10,
+            SupplierId = supplier1.SupplierId
+        };
+        
+        var product2 = new Product
+        {
+            Name = "USB Keyboard",
+            SKU = "KB-002",
+            Price = 49.99m,
+            Stock = 30,
+            MinimumStock = 15,
+            SupplierId = supplier1.SupplierId
+        };
+        
+        var product3 = new Product
+        {
+            Name = "Printer Paper",
+            SKU = "PP-003",
+            Price = 9.99m,
+            Stock = 200,
+            MinimumStock = 50,
+            SupplierId = supplier2.SupplierId
+        };
+        
+        Products.AddRange(product1, product2, product3);
+        SaveChanges();
+        
+        // Add sample stock movements
+        var movement1 = new StockMovement
+        {
+            MovementType = MovementType.IN,
+            ProductId = product1.ProductId,
+            Quantity = 50,
+            Timestamp = DateTime.UtcNow.AddDays(-7),
+            UserId = "system"
+        };
+        
+        var movement2 = new StockMovement
+        {
+            MovementType = MovementType.OUT,
+            ProductId = product1.ProductId,
+            Quantity = 5,
+            Timestamp = DateTime.UtcNow.AddDays(-1),
+            UserId = "system"
+        };
+        
+        StockMovements.AddRange(movement1, movement2);
+        SaveChanges();
+    }
 } 

@@ -2,6 +2,7 @@
 bin/
 obj/
 publish/
+publish.zip
 *.user
 *.userosscache
 *.suo
@@ -25,6 +26,9 @@ Thumbs.db
 
 # Logs
 *.log
+LogFiles/
+deployments/
+webapp_logs.zip
 
 # Runtime data
 pids

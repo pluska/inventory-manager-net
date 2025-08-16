@@ -4,7 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Authorization
-@inject ApplicationDbContext Context
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
@@ -143,11 +143,12 @@
 
     private async Task LoadData()
     {
-        MovementList = await Context.StockMovements
+        using var context = await ContextFactory.CreateDbContextAsync();
+        MovementList = await context.StockMovements
             .Include(sm => sm.Product)
             .OrderByDescending(sm => sm.Timestamp)
             .ToListAsync();
-        ProductList = await Context.Products.ToListAsync();
+        ProductList = await context.Products.ToListAsync();
     }
 
     private IEnumerable<StockMovement> FilteredMovements => 
@@ -163,9 +164,13 @@
     {
         if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete this stock movement? This action cannot be undone."))
         {
-            // TODO: Reverse stock change before deleting
-            Context.StockMovements.Remove(movement);
-            await Context.SaveChangesAsync();
+            using var context = await ContextFactory.CreateDbContextAsync();
+            var existingMovement = await context.StockMovements.FindAsync(movement.MovementId);
+            if (existingMovement != null)
+            {
+                context.StockMovements.Remove(existingMovement);
+                await context.SaveChangesAsync();
+            }
             await LoadData();
         }
     }
@@ -187,6 +192,7 @@
 
     private async Task HandleSaveMovement(StockMovement movement)
     {
+        using var context = await ContextFactory.CreateDbContextAsync();
         // Set timestamp if not editing
         if (!IsEditing)
         {
@@ -195,7 +201,7 @@
 
         if (IsEditing)
         {
-            var existingMovement = await Context.StockMovements.FindAsync(movement.MovementId);
+            var existingMovement = await context.StockMovements.FindAsync(movement.MovementId);
             if (existingMovement != null)
             {
                 // TODO: Handle stock reversal and update
@@ -207,10 +213,10 @@
         }
         else
         {
-            Context.StockMovements.Add(movement);
+            context.StockMovements.Add(movement);
             
             // Update product stock
-            var product = await Context.Products.FindAsync(movement.ProductId);
+            var product = await context.Products.FindAsync(movement.ProductId);
             if (product != null)
             {
                 if (movement.MovementType == MovementType.IN)
@@ -224,7 +230,7 @@
             }
         }
         
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         await LoadData();
         CloseModal();
     }

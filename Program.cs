@@ -23,12 +23,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
 // Add Entity Framework
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Add DbContextFactory for Blazor components with scoped lifetime
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Remove the scoped DbContext that causes concurrency issues
+// builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Identity with Blazor Server specific configuration
 builder.Services.AddDefaultIdentity<IdentityUser>(options => 
@@ -109,12 +109,41 @@ builder.Services.AddScoped<IInventoryEmailSender, DevelopmentEmailSender>();
 
 var app = builder.Build();
 
+// Initialize database
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        // Ensure database is created and migrations applied
+        context.Database.EnsureCreated();
+        // For SQL Server, we can also use migrations if needed
+        // context.Database.Migrate();
+        
+        // Seed initial data
+        context.SeedData();
+        
+        // Log successful database initialization
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Database initialized and seeded successfully");
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while initializing the database");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+}
+else
+{
+    app.UseDeveloperExceptionPage();
 }
 
 // Only use HTTPS redirection in production
